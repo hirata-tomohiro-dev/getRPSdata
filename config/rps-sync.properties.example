@@ -6,7 +6,8 @@ rps.baseUrl=http://10.202.xxx.xxx:13010
 rps.schema=KYKOWNER
 rps.tableListUrl=http://10.202.xxx.xxx:13010/table/list?utf8=%E2%9C%93&pm=ent&keyword_db=&keyword_object_name=&keyword_description=&keyword_group_name=&search_condition%5Btype%5D=REFLECT&submit=%E5%85%A8%E4%BB%B6%E8%A1%A8%E7%A4%BA
 rps.schemaSetPath=/schema/set_schema
-rps.proxyHost=10.202.5.30
+# Leave proxy settings blank unless the VDI must route through a proxy.
+rps.proxyHost=
 rps.proxyPort=8080
 rps.sleepMillis=100
 rps.connectTimeoutMillis=15000
@@ -20,7 +21,7 @@ sync.maxTables=0
 
 # PostgreSQL sync settings
 pg.enabled=true
-pg.host=10.205.185.138
+pg.host=127.0.0.1
 pg.port=5432
 pg.database=postgres
 pg.user=postgres

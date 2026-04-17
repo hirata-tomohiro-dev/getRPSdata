@@ -605,7 +605,7 @@ public final class RpsTableSyncApp {
             }
 
             boolean postgresEnabled = Boolean.parseBoolean(firstNonBlank(properties.getProperty("pg.enabled"), "true"));
-            String pgHost = firstNonBlank(properties.getProperty("pg.host"), "");
+            String pgHost = firstNonBlank(properties.getProperty("pg.host"), "127.0.0.1");
             int pgPort = parseInt(properties.getProperty("pg.port"), 5432);
             String pgDatabase = firstNonBlank(properties.getProperty("pg.database"), "postgres");
             String pgUser = firstNonBlank(properties.getProperty("pg.user"), "postgres");
