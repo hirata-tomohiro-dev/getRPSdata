@@ -71,10 +71,15 @@ public final class RpsTableSyncApp {
 
         System.out.println("config=" + configPath);
         System.out.println("resultDir=" + config.resultDir());
+        System.out.println("maxTables=" + config.maxTables());
+        if (config.postgresEnabled()) {
+            System.out.println("postgresTarget=" + config.pgSchema() + "." + config.pgTable());
+        }
 
         SyncReport report = sync(config);
 
-        System.out.println("tables.total=" + report.totalTables());
+        System.out.println("tables.discovered=" + report.discoveredTables());
+        System.out.println("tables.selected=" + report.selectedTables());
         System.out.println("tables.saved=" + report.savedTables());
         System.out.println("tables.failed=" + report.failedTables());
         System.out.println("summaryTsv=" + report.summaryFile());
@@ -112,11 +117,12 @@ public final class RpsTableSyncApp {
         String listHtml = get(config.tableListUrl(), config);
         writeText(debugDir.resolve("_debug_table_list.html"), listHtml);
 
-        List<TableInfo> tables = parseTables(listHtml, config.baseUrl(), config.schema());
-        if (tables.isEmpty()) {
+        List<TableInfo> discoveredTables = parseTables(listHtml, config.baseUrl(), config.schema());
+        if (discoveredTables.isEmpty()) {
             String head = listHtml.substring(0, Math.min(1000, listHtml.length()));
             throw new IllegalStateException("No table links were detected in the table list response.\n" + head);
         }
+        List<TableInfo> tables = selectTables(discoveredTables, config.maxTables());
 
         List<TableSnapshot> snapshots = new ArrayList<>();
         List<FailureRecord> failures = new ArrayList<>();
@@ -170,7 +176,7 @@ public final class RpsTableSyncApp {
             writeFailures(failureFile, failures);
         }
 
-        return new SyncReport(tables.size(), snapshots.size(), failures.size(), summaryFile, failureFile);
+        return new SyncReport(discoveredTables.size(), tables.size(), snapshots.size(), failures.size(), summaryFile, failureFile);
     }
 
     static List<TableInfo> parseTables(String html, String baseUrl, String fallbackSchema) throws Exception {
@@ -232,6 +238,13 @@ public final class RpsTableSyncApp {
     static String buildDetailFileName(TableInfo table) {
         String version = table.version().isBlank() ? "no_version" : table.version();
         return sanitizeFileComponent(table.tableName() + "_" + version) + ".txt";
+    }
+
+    static List<TableInfo> selectTables(List<TableInfo> tables, int maxTables) {
+        if (maxTables <= 0 || tables.size() <= maxTables) {
+            return new ArrayList<>(tables);
+        }
+        return new ArrayList<>(tables.subList(0, maxTables));
     }
 
     private static String buildDetailUrl(String baseUrl, TableInfo table) {
@@ -499,6 +512,7 @@ public final class RpsTableSyncApp {
         private final int connectTimeoutMillis;
         private final int readTimeoutMillis;
         private final Path resultDir;
+        private final int maxTables;
         private final boolean postgresEnabled;
         private final String pgHost;
         private final int pgPort;
@@ -524,6 +538,7 @@ public final class RpsTableSyncApp {
                 int connectTimeoutMillis,
                 int readTimeoutMillis,
                 Path resultDir,
+                int maxTables,
                 boolean postgresEnabled,
                 String pgHost,
                 int pgPort,
@@ -547,6 +562,7 @@ public final class RpsTableSyncApp {
             this.connectTimeoutMillis = connectTimeoutMillis;
             this.readTimeoutMillis = readTimeoutMillis;
             this.resultDir = resultDir;
+            this.maxTables = maxTables;
             this.postgresEnabled = postgresEnabled;
             this.pgHost = pgHost;
             this.pgPort = pgPort;
@@ -583,6 +599,10 @@ public final class RpsTableSyncApp {
             int readTimeoutMillis = parseInt(properties.getProperty("rps.readTimeoutMillis"), 15000);
             Path resultDir = path.getParent().getParent().resolve(
                     firstNonBlank(properties.getProperty("result.dir"), DEFAULT_RESULT_DIR)).normalize();
+            int maxTables = parseInt(properties.getProperty("sync.maxTables"), 0);
+            if (maxTables < 0) {
+                throw new IllegalArgumentException("sync.maxTables must be 0 or greater.");
+            }
 
             boolean postgresEnabled = Boolean.parseBoolean(firstNonBlank(properties.getProperty("pg.enabled"), "true"));
             String pgHost = firstNonBlank(properties.getProperty("pg.host"), "");
@@ -618,6 +638,7 @@ public final class RpsTableSyncApp {
                     connectTimeoutMillis,
                     readTimeoutMillis,
                     resultDir,
+                    maxTables,
                     postgresEnabled,
                     pgHost,
                     pgPort,
@@ -718,6 +739,10 @@ public final class RpsTableSyncApp {
             return resultDir;
         }
 
+        int maxTables() {
+            return maxTables;
+        }
+
         boolean postgresEnabled() {
             return postgresEnabled;
         }
@@ -785,6 +810,12 @@ public final class RpsTableSyncApp {
     record FailureRecord(String tableName, String version, String error) {
     }
 
-    record SyncReport(int totalTables, int savedTables, int failedTables, Path summaryFile, Path failureFile) {
+    record SyncReport(
+            int discoveredTables,
+            int selectedTables,
+            int savedTables,
+            int failedTables,
+            Path summaryFile,
+            Path failureFile) {
     }
 }

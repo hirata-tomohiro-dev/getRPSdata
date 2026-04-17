@@ -89,6 +89,8 @@ Linux 側で以下を実行します。
 ./scripts/linux/run-rps-sync.sh /path/to/rps-sync.properties
 ```
 
+最初の 5 件だけで疎通確認したい場合は、通常実行ではなく [docs/linux-offline-smoketest.md](/Users/hirata_tomohiro/src/work/getRPSdata/getRPSdata/docs/linux-offline-smoketest.md) のスモークテストを先に実施してください。
+
 ## 6. 実行結果
 
 成功すると以下が生成されます。
@@ -137,5 +139,6 @@ PowerShell で確認:
 ## 8. 補足
 
 - `rps.sleepMillis` の既定値は `100` です。参考プログラムの要求どおり、リクエスト間隔を 0.1 秒にしています
+- `sync.maxTables=0` は全件、`sync.maxTables=5` は先頭 5 件だけを処理します
 - 実パスワードはコミットしないでください
 - `pg.password` を設定ファイルに書きたくない場合は `PG_PASSWORD` 環境変数でも渡せます

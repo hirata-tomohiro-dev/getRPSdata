@@ -1,0 +1,7 @@
+# Copy config/rps-sync.properties first, then overlay the smoke test settings below.
+# The actual smoke test script auto-generates a temporary config from the main config,
+# so this file is mainly a reference of the forced values.
+
+sync.maxTables=5
+result.dir=result-smoketest
+pg.table=rps_table_inventory_smoketest

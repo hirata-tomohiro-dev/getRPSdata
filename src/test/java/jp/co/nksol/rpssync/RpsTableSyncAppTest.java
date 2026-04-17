@@ -12,6 +12,7 @@ public final class RpsTableSyncAppTest {
         testParseTables();
         testParseDetail();
         testSanitizeFileComponent();
+        testSelectTables();
         System.out.println("RpsTableSyncAppTest: OK");
     }
 
@@ -38,6 +39,14 @@ public final class RpsTableSyncAppTest {
 
     private static void testSanitizeFileComponent() {
         assertEquals("AGENT_DETAIL_1.2", RpsTableSyncApp.sanitizeFileComponent("AGENT_DETAIL/1.2"), "sanitize");
+    }
+
+    private static void testSelectTables() throws Exception {
+        String html = loadFixture("table-list.html");
+        List<RpsTableSyncApp.TableInfo> tables = RpsTableSyncApp.parseTables(html, "http://10.202.168.238:13010", "KYKOWNER");
+        List<RpsTableSyncApp.TableInfo> selected = RpsTableSyncApp.selectTables(tables, 1);
+        assertEquals(1, selected.size(), "selected count");
+        assertEquals("AGENT_DETAIL", selected.get(0).tableName(), "selected first");
     }
 
     private static String loadFixture(String resourceName) {

@@ -15,6 +15,9 @@ rps.readTimeoutMillis=15000
 # Output directory
 result.dir=result
 
+# Limit the number of tables to process. 0 means no limit.
+sync.maxTables=0
+
 # PostgreSQL sync settings
 pg.enabled=true
 pg.host=10.205.185.138
